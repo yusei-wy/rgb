@@ -1,7 +1,8 @@
-mod boot_rom;
+mod bootrom;
 mod gameboy;
-mod h_ram;
-mod w_ram;
+mod hram;
+mod peripherals;
+mod wram;
 
 fn main() {
     println!("Hello, world!");
