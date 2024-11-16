@@ -4,6 +4,11 @@
 
 ## Requirements
 
-- Rust
-- CMake
-- sdl2
+- Docker
+- VSCode (Dev Container)
+
+## 環境構築
+
+1. git clone
+1. VSCode でプロジェクトを開く
+1. Reopen in container
