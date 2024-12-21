@@ -1,5 +1,6 @@
 use crate::{bootrom::Bootrom, hram::HRam, wram::WRam};
 
+/// CPU 以外のコンポーネントを管理する
 pub struct Peripherals {
     bootrom: Bootrom,
     wram: WRam,

@@ -11,7 +11,7 @@ struct Context {
 }
 
 pub struct Cpu {
-    registers: Registers,
+    pub registers: Registers,
     context: Context,
 }
 
