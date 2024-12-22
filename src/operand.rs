@@ -127,3 +127,26 @@ impl IO8<Imm8> for Cpu {
         unreachable!()
     }
 }
+
+impl IO16<Imm16> for Cpu {
+    fn read16(&mut self, bus: &Peripherals, _: Imm16) -> Option<u16> {
+        step!(None, {
+            0: if let Some(lo) = self.read8(bus, Imm8) {
+                VAL8.store(lo, Relaxed);
+                go!(1);
+            },
+            1: if let Some(hi) = self.read8(bus, Imm8) {
+                VAL16.store(u16::from_le_bytes([VAL8.load(Relaxed), hi]), Relaxed);
+                go!(2);
+            },
+            2: {
+                go!(0);
+                return Some(    VAL16.load(Relaxed));
+            },
+        });
+    }
+
+    fn write16(&mut self, _: &mut Peripherals, _: Imm16, _: u16) -> Option<()> {
+        unreachable!()
+    }
+}
