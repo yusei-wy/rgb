@@ -103,10 +103,9 @@ impl IO16<Reg16> for Cpu {
     }
 }
 
-// NOTE:
-// Imm8 はプログラムカウンタが指す場所から読み取られる 8 bit
-// 1回のメモリ読み出しが必要なので 1 M-cycle 消費する
-
+/// プログラムカウンタが指す場所から読み取られる 8 bit
+///
+/// 1回のメモリ読み出しが必要なので 1 M-cycle  かかる
 impl IO8<Imm8> for Cpu {
     fn read8(&mut self, bus: &Peripherals, _: Imm8) -> Option<u8> {
         step!(None, {
@@ -128,6 +127,9 @@ impl IO8<Imm8> for Cpu {
     }
 }
 
+/// プログラムカウンタが指す場所から読み取られる 16 bit
+///
+/// 2回のメモリ読み出しが必要なので 2 M-cycle かかる
 impl IO16<Imm16> for Cpu {
     fn read16(&mut self, bus: &Peripherals, _: Imm16) -> Option<u16> {
         step!(None, {
