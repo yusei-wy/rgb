@@ -1,6 +1,10 @@
 use std::sync::atomic::{AtomicU16, AtomicU8, Ordering::Relaxed};
 
-use crate::{cpu::Cpu, peripherals::Peripherals};
+use crate::{
+    cpu::Cpu,
+    instructions::{go, step},
+    peripherals::Peripherals,
+};
 
 // NOTE: オペランドの返り値が Option なのは 0 M-cycle で値の読み書きが完了するとは限らないため
 
@@ -16,25 +20,13 @@ pub trait IO16<T: Copy> {
     fn write16(&mut self, bus: &mut Peripherals, dst: T, val: u16) -> Option<()>;
 }
 
+#[rustfmt::skip]
 #[derive(Clone, Copy, Debug)]
-pub enum Reg8 {
-    A,
-    B,
-    C,
-    D,
-    E,
-    H,
-    L,
-}
+pub enum Reg8 { A, B, C, D, E, H, L }
 
+#[rustfmt::skip]
 #[derive(Clone, Copy, Debug)]
-pub enum Reg16 {
-    AF,
-    BC,
-    DE,
-    HL,
-    SP,
-}
+pub enum Reg16 { AF, BC, DE, HL, SP }
 
 #[derive(Clone, Copy, Debug)]
 pub struct Imm8;
@@ -42,32 +34,20 @@ pub struct Imm8;
 #[derive(Clone, Copy, Debug)]
 pub struct Imm16;
 
+#[rustfmt::skip]
 #[derive(Clone, Copy, Debug)]
-pub enum Indirect {
-    BC,
-    DE,
-    HL,
-    CFF,
-    HLD,
-    HLI,
-}
+pub enum Indirect { BC, DE, HL, CFF, HLD, HLI }
 
+#[rustfmt::skip]
 #[derive(Clone, Copy, Debug)]
-pub enum Direct8 {
-    D,
-    DFF,
-}
+pub enum Direct8 { D, DFF }
 
 #[derive(Clone, Copy, Debug)]
 pub struct Direct16;
 
+#[rustfmt::skip]
 #[derive(Clone, Copy, Debug)]
-pub enum Cond {
-    NZ,
-    Z,
-    NC,
-    C,
-}
+pub enum Cond { NZ, Z, NC, C }
 
 // NOTE:
 // メモリに 8 bit 読み書きするごとに 1 M-cycle 消費する
@@ -129,23 +109,18 @@ impl IO16<Reg16> for Cpu {
 
 impl IO8<Imm8> for Cpu {
     fn read8(&mut self, bus: &Peripherals, _: Imm8) -> Option<u8> {
-        // 処理ステップや処理結果を記録しておく
-        // これにより複数回のメソッド呼び出しを跨いで処理を継続できる
-        static STEP: AtomicU8 = AtomicU8::new(0);
-        static VAL8: AtomicU8 = AtomicU8::new(0);
-        match STEP.load(Relaxed) {
-            0 => {
+        step!(None, {
+            0: {
                 VAL8.store(bus.read(self.registers.pc), Relaxed);
-                self.registers.pc = self.registers.pc.wrapping_add(1);
-                STEP.fetch_add(1, Relaxed);
-                None
-            }
-            1 => {
-                STEP.store(0, Relaxed);
-                Some(VAL8.load(Relaxed))
-            }
-            _ => unreachable!(),
-        }
+                go!(1);
+                return None;
+            },
+            1: {
+                go!(0);
+                println!("test");
+                return Some(VAL8.load(Relaxed));
+            },
+        });
     }
 
     fn write8(&mut self, _: &mut Peripherals, _: Imm8, _: u8) -> Option<()> {
